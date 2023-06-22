@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<title>Сортировка массива (Халяпин О.Б.)</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	
+<style media="screen,projection" type="text/css">
+body {
+	background-color: #CCCCCC;
+}
+fieldset {
+	background-color: #E0E0E0;
+	display:inline-block;
+	line-height: 1.5;
+}
+legend {
+	background-color: #999999;
+	padding: 5px;
+	color: #FFFFFF;
+	font-weight: bold;
+}
+.wrap {
+	margin: 15px auto 0 auto;
+	text-align: center;
+}
+#MainDiv {
+	background-color: #E0E0E0;
+	padding: 15px;
+	display: inline-block;
+	z-index: 0;
+	text-align: left;
+}
+#buttn2 {
+	margin-bottom: 10px;
+}
+table, tr, td {
+	border-collapse: collapse;
+	border-spacing: 0px;
+	text-align: center;
+	vertical-align: middle;
+	margin: 0px auto;
+	padding: 3px;
+	background-color: #999999;
+}
+.tabdiv {
+	width: 50px;
+	height: 20px;
+	text-align: center;
+	vertical-align: top;
+}
+.tabinp {
+	margin: 0px auto;
+}
+.tabchn {
+	margin: 0px auto;
+	position: absolute;
+	z-index: 1;
+}
+fieldset, legend, #MainDiv, table, tr, td {
+	border: 1px #666666 solid;
+}
+</style>
+	
+<script type="text/javascript">
+// Сброс при обновлении страницы
+function BodyLoad() {
+	document.getElementById('inpmax').value = 10;
+	document.getElementById('buttn1').disabled = false;
+	document.getElementById('buttn2').disabled = false;
+	document.getElementById('inpchk').checked = true;
+	CreateTable(10, 1);
+}
+// Создание таблицы
+function CreateTable(max, rnd) {
+	var tab = document.createElement('table');
+	tab.id = 'MainTab';
+	tab.className = 'maintab';
+	document.getElementById('MainDiv').appendChild(tab);
+	var rows = parseInt(max/10);
+	if (rows < 1) rows = 1;
+	if (max/10 > rows) rows++;
+	var cells = 1;
+	for (var row=1; row<=rows; row++) {
+		var tr = document.createElement('tr');
+		tr.id = 'tr'+row;
+		document.getElementById('MainTab').appendChild(tr);
+		for (cell=1; cell<=10; cell++) {
+			var td = document.createElement('td');
+			td.id = 'td'+(cells-1);
+			td.innerHTML = '&nbsp;';
+			document.getElementById(tr.id).appendChild(td);
+			var div = document.createElement('div');
+			div.id = 'div'+(cells-1);
+			div.className = 'tabdiv';
+			td.innerHTML = cells+'<br>';
+			document.getElementById(td.id).appendChild(div);
+			var inp = document.createElement('input');
+			inp.id = 'inp'+(cells-1);
+			inp.setAttribute('type', 'text');
+			inp.className = 'tabinp';
+			inp.setAttribute('size', 3);
+			inp.setAttribute('maxLength', 3);
+			if (rnd == 1) inp.value = Math.round(Math.random()*(1000)-0.5);
+			document.getElementById(div.id).appendChild(inp);
+			if (cells == max && cell < 10) {
+				if (rows > 1) {
+					var empty = document.createElement('td');
+					empty.innerHTML = '&nbsp;';
+					empty.setAttribute('colSpan', 10-cell)
+					document.getElementById(tr.id).appendChild(empty);
+				}
+				break;
+			}
+			cells++;
+		}
+	}
+}
+// Пересоздание таблицы
+function RefreshTab() {
+	var max = document.getElementById('inpmax').value;
+	var rnd = (document.getElementById('inpchk').checked) ? 1 : 0;
+	max = parseInt(max);
+	if (!max || max < 5) max = 5; // ограничение минимума
+	if (max > 30) max = 30; // ограничение максимума
+	document.getElementById('inpmax').value = max;
+	document.getElementById('MainDiv').removeChild(document.getElementById('MainTab'));
+	CreateTable(max, rnd);
+}
+// Получение координат ячейки
+function getOffset(obj) {
+	var top = 0, left = 0;
+	if (obj.getBoundingClientRect) {
+		var box = obj.getBoundingClientRect();
+		var body = document.body;
+		var docElem = document.documentElement;
+		var scrollTop = window.pageYOffset || docElem.scrollTop || body.scrollTop;
+		var scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft;
+		var clientTop = docElem.clientTop || body.clientTop || 0;
+		var clientLeft = docElem.clientLeft || body.clientLeft || 0;
+		top = Math.round(box.top + scrollTop - clientTop);
+		left = Math.round(box.left + scrollLeft - clientLeft);
+	} else {
+		while(obj) {
+			top += parseInt(obj.offsetTop);
+			left += parseInt(obj.offsetLeft);
+			obj = obj.offsetParent;
+		}
+	}
+	return new Object({top:top, left:left});
+}
+// Сортировка массива ячеек
+function SortArray() {
+	var spd = 10; // Скорость анимации
+	var i = 0, j = 0, count = 0;
+	var chn1 = document.getElementById('chng1');
+	var chn2 = document.getElementById('chng2');
+	document.getElementById('buttn1').disabled = true;
+	document.getElementById('buttn2').disabled = true;
+	var inp1, inp2, pos1, pos2, top1, top2, left1, left2, timer;
+	while (document.getElementById('inp'+count)) count++;
+	movint();
+	function increm() {
+		j++;
+		if (j >= count-i-1) {
+			j = 0;
+			i++;
+		}
+		if (i < count-1) {
+			movint();
+		} else {
+			alert('Сортировка окончена');
+			document.getElementById('buttn1').disabled = false;
+			document.getElementById('buttn2').disabled = false;
+		}
+	}
+	function movint() {
+		inp1 = document.getElementById('inp'+j);
+		inp2 = document.getElementById('inp'+(j+1));
+		inp1.value = (parseInt(inp1.value)) ? parseInt(inp1.value) : 0;
+		inp2.value = (parseInt(inp2.value)) ? parseInt(inp2.value) : 0;
+		if (Number(inp1.value) <= Number(inp2.value)) {
+			increm();
+			return;
+		}
+		pos1 = getOffset(inp1);
+		pos2 = getOffset(inp2);
+		chn1.value = inp1.value;
+		chn2.value = inp2.value;
+		chn1.style.top = pos1.top + 'px';
+		chn2.style.top = pos2.top + 'px';
+		chn1.style.left = pos1.left + 'px';
+		chn2.style.left = pos2.left + 'px';
+		chn1.style.display = 'block';
+		chn2.style.display = 'block';
+		inp1.style.display = 'none';
+		inp2.style.display = 'none';
+		top1 = pos1.top;
+		top2 = pos2.top;
+		left1 = pos1.left;
+		left2 = pos2.left;
+		timer = setInterval(movfst, spd);
+	}
+	function movfst() {
+		top1--;
+		chn1.style.top = top1 + 'px';
+		if (top1 == pos1.top - 10) {
+			clearInterval(timer);
+			var temp = (j+1)/10;
+			var spd2 = (parseInt(temp) == temp) ? parseInt(spd/5) : spd;
+			timer = setInterval(movsec, spd2);
+		}
+	}
+	function movsec() {
+		left1 = (left1 < pos2.left) ? left1+1 : left1-1;
+		left2 = (left2 < pos1.left) ? left2+1 : left2-1;
+		chn1.style.left = left1 + 'px';
+		chn2.style.left = left2 + 'px';
+		if (left1 == pos2.left && left2 == pos1.left) {
+			clearInterval(timer);
+			timer = setInterval(movtrd, spd);
+		}
+	}
+	function movtrd() {
+		top1 = (top1 < pos2.top) ? top1+1 : top1-1;
+		top2 = (top2 < pos1.top) ? top2+1 : top2-1;
+		chn1.style.top = top1 + 'px';
+		chn2.style.top = top2 + 'px';
+		if (top1 == pos2.top && top2 == pos1.top) {
+			clearInterval(timer);
+			inp1.value = chn2.value;
+			inp2.value = chn1.value;
+			inp1.style.display = 'block';
+			inp2.style.display = 'block';
+			chn1.style.display = 'none';
+			chn2.style.display = 'none';
+			increm();
+		}
+	}
+}
+</script>
+</head>
+<body onload="BodyLoad()">
+
+<fieldset>
+	<legend>Сортировка массива пузырьковым методом.<br>Халяпин О.Б. (+7-911-833-8679)</legend>
+	<input id="inpmax" type="text" size="2" maxlength="2" value="10">&nbsp;Количество ячеек (5-30):<br>
+	<input id="inpchk" type="checkbox" value="1" checked>&nbsp;Заполнить рандомными значениями.<br>
+	<input id="buttn1" type="button" value="Обновить" onclick="RefreshTab()">
+</fieldset>
+
+<div class="wrap">
+	<div id="MainDiv">
+		<input id="buttn2" type="button" value="Сортировать" onclick="SortArray()">
+	</div>
+</div>
+
+<input id="chng1" type="text" class="tabchn" style="display:none" size="3" maxlength="3">
+<input id="chng2" type="text" class="tabchn" style="display:none" size="3" maxlength="3">
+
+</body>
+</html>
