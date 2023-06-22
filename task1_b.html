@@ -1,0 +1,93 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+<title>Замечательная телефонная книжка</title>
+</head>
+<script type="text/javascript">
+	function search() {
+			var formData = new FormData();
+			formData.append('action', 'search');
+			sendForm(formData);
+	}
+	function edit(id) {
+		var formData = new FormData();
+		formData.append('action', 'update');
+		formData.append('id', id);
+		formData.append('name', document.getElementById('name_'+id).value);
+		formData.append('phone', document.getElementById('phone_'+id).value);
+		sendForm(formData);
+	}
+	function del(id) {
+		var formData = new FormData();
+		formData.append('action', 'delete');
+		formData.append('id', id);
+		sendForm(formData);
+	}
+	function add() {
+		var formData = new FormData();
+		formData.append('action', 'addnew');
+		formData.append('name', document.getElementById('name_new').value);
+		formData.append('phone', document.getElementById('phone_new').value);
+		sendForm(formData);
+	}
+
+	async function sendForm(formData) {
+		var response = await fetch ('http://work/cgi-bin/task1_b.pl', {
+			method: 'POST',
+			body: formData
+		});
+		if (response.ok) {
+			var json = await response.json();
+			printResult(json);
+		} else {
+			alert("Ошибка HTTP: " + response.status);
+		}
+		return;
+	}
+	function printResult(json) {
+		var div = document.getElementById('result');
+		div.innerHTML = '';
+		for (var i = 0; i < json.length; i++) {
+			var br = document.createElement("BR");
+			var name = document.createElement("INPUT");
+			name.id = ("name_"+json[i][0]);
+			name.setAttribute("type", "text");
+			name.setAttribute("value", json[i][1]);
+			var phone = document.createElement("INPUT");
+			phone.id = ("phone_"+json[i][0]);
+			phone.setAttribute("type", "text");
+			phone.setAttribute("value", json[i][2]);
+			var save = document.createElement("INPUT");
+			save.setAttribute("type", "button");
+			save.setAttribute("value", "изменить");
+			save.setAttribute("onclick", ("edit("+json[i][0]+")"));
+			var del = document.createElement("INPUT");
+			del.setAttribute("type", "button");
+			del.setAttribute("value", "удалить");
+			del.setAttribute("onclick", ("del("+json[i][0]+")"));
+			div.append(name);
+			div.append(phone);
+			div.append(save);
+			div.append(del);
+			div.append(br);
+		}
+		var name = document.createElement("INPUT");
+		name.id = ("name_new");
+		name.setAttribute("type", "text");
+		var phone = document.createElement("INPUT");
+		phone.id = ("phone_new");
+		phone.setAttribute("type", "text");
+		var but = document.createElement("INPUT");
+		but.setAttribute("type", "button");
+		but.setAttribute("value", "добавить");
+		but.setAttribute("onclick", "add()");
+		div.append(name);
+		div.append(phone);
+		div.append(but);
+	}
+</script>
+
+<body style="background-color:#cccccc;" onload="search()">
+	<div id="result" style="margin:50px;width=100%;"></div>
+</body>
+</html>
